@@ -18,6 +18,6 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 }
 ```
 (3) 界面效果:
-```
-![这里写图片描述](http://img.blog.csdn.net/20150729150309253)
-```
+
+![界面效果(http://img.blog.csdn.net/20150729150309253)
+
