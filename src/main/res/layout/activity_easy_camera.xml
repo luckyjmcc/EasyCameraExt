@@ -1,0 +1,56 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <SurfaceView
+        android:id="@+id/camera_preview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/rl_action"
+        android:layout_weight="1" />
+
+    <RelativeLayout
+      android:id="@+id/rl_action"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#898989"
+        android:padding="20dp"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/btn_capture_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_toLeftOf="@+id/btn_picker_to_camera"
+            android:background="@drawable/capture_cancel"
+
+            android:text="Capture" />
+
+        <ImageButton
+            android:id="@+id/btn_picker_to_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_gravity="center"
+            android:background="@drawable/picker_to_camera"
+            android:text="Capture" />
+
+        <ImageButton
+            android:id="@+id/btn_apture_done"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_toRightOf="@+id/btn_picker_to_camera"
+            android:background="@drawable/apture_done"
+            android:text="Capture" />
+    </RelativeLayout>
+
+</RelativeLayout>
