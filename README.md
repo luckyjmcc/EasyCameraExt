@@ -6,7 +6,7 @@
  
 #### (1) 启动：
  
- `startActivityForResult( new Intent(ChatActivity.this, EasyCameraActivity.class), REQUEST_CODE_CAMERA);`
+ `startActivityForResult( new Intent(mContext, EasyCameraActivity.class), REQUEST_CODE_CAMERA);`
 
 ####  (2) 获取拍照结果(目前仅返回照片在sd卡上的目录)：
 ```
