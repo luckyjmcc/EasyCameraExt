@@ -19,5 +19,5 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 ```
 (3) 界面效果:
 
-![界面效果(http://img.blog.csdn.net/20150729150309253)
+![界面效果](http://img.blog.csdn.net/20150729150309253)
 
