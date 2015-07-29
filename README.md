@@ -8,7 +8,7 @@
  
  `startActivityForResult( new Intent(mContext, EasyCameraActivity.class), REQUEST_CODE_CAMERA);`
 
-####  (2) 获取拍照结果(目前仅返回照片在sd卡上的目录)：
+####  (2) 获取拍照结果(目前仅返回照片在sd卡上的目录, /sdcard/Android/data/包名/files/Pictures/时间戳.jpg)：
 ```
 protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
