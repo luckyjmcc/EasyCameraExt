@@ -1,6 +1,5 @@
 # EasyCameraExt
-
-根据 https://github.com/Glamdring/EasyCamera 改写。
+对于调用系统照相机经常导致Activity被回收的情况的朋友，可以尝试使用EasyCameraExt。根据 https://github.com/Glamdring/EasyCamera 改写。
 
 ##使用：
  
