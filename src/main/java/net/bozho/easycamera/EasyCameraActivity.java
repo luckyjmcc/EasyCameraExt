@@ -11,6 +11,8 @@ import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
+import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -28,6 +30,8 @@ import java.util.List;
 
 
 public class EasyCameraActivity extends Activity {
+    private static final String TAG = "EasyCameraActivity";
+
     public final static String RESULE_IMAGE_PATH = "RESULE_IMAGE_PATH";
 
     private SurfaceView mSurfaceView;
@@ -37,6 +41,10 @@ public class EasyCameraActivity extends Activity {
 
 
     /**
+     * 长宽比
+     */
+    private float mRate;
+    /**
      * 判断是否在预览状态
      */
     private boolean previewIsRunning = false;
@@ -44,7 +52,7 @@ public class EasyCameraActivity extends Activity {
     private EasyCamera mEasyCamera = null;
     private EasyCamera.CameraActions mCameraActions = null;
     private String mImagePath = null;
-
+    Display display;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,8 +67,16 @@ public class EasyCameraActivity extends Activity {
         btn_capture_cancel = (ImageButton) findViewById(R.id.btn_capture_cancel);
         btn_apture_done = (ImageButton) findViewById(R.id.btn_apture_done);
         btn_apture_done.setVisibility(View.GONE);
-
         mSurfaceHolder = mSurfaceView.getHolder();
+        // 获取屏幕信息
+//        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+//        display = wm.getDefaultDisplay();
+//        mRate = display.getHeight()/display.getWidth();
+//        mRate = (new BigDecimal(mRate).setScale(2, BigDecimal.ROUND_HALF_UP)).floatValue();
+//        CameraParaUtil.mRate = mRate;
+        CameraParaUtil.mRate = DisplayUtil.getScreenRate(this);
+        Log.i(TAG,"长宽比率:"+  CameraParaUtil.mRate);
+        //
 
         mSurfaceHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -88,8 +104,13 @@ public class EasyCameraActivity extends Activity {
                     parameters.setPreviewSize(pictureS.width, pictureS.height);
                     //
                     List<Size> pictureSizes = parameters.getSupportedPictureSizes();
-                    pictureS = CameraParaUtil.getInstance().getPictureSize(pictureSizes, width);
-                    parameters.setPictureSize(pictureS.width, pictureS.height);
+                    //params.setPictureSize(params.getSupportedPictureSizes().get(0))  魅族无效、天语w800无效
+                    if (pictureSizes != null && 0 < pictureSizes.size()) {
+                        pictureS = CameraParaUtil.getInstance().getPictureSize(pictureSizes, width);
+                        parameters.setPictureSize(pictureS.width, pictureS.height);
+                    } else {
+                        parameters.setPictureSize(display.getWidth(), display.getHeight());
+                    }
                     //
                     mEasyCamera.setParameters(parameters);//把上面的设置 赋给摄像头
                     try {
@@ -133,7 +154,12 @@ public class EasyCameraActivity extends Activity {
                         FileOutputStream fos = null;
                         try {
                             //Log.d("TAG", getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator + "abc.jpg");
-                            mImagePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator + "abc.jpg";
+                            //File picture = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                            //picture.delete();
+                            //deleteFile(picture);//删除文件夹下的所有文件
+                            //
+                            String filename = System.currentTimeMillis() + ".jpg";
+                            mImagePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator + filename;
                             fos = new FileOutputStream(new File(mImagePath));
                             fos.write(data);
                             fos.close();
@@ -175,6 +201,16 @@ public class EasyCameraActivity extends Activity {
             }
         });
     }
+    public void deleteFile(File oldPath) {
+        if (oldPath.isDirectory()) {
+            File[] files = oldPath.listFiles();
+            for (File file : files) {
+                deleteFile(file);
+            }
+        }else{
+            oldPath.delete();
+        }
+    }
 
     private void showDoneButton() {
         float[] alpha = {0f, 1f};
@@ -207,13 +243,13 @@ public class EasyCameraActivity extends Activity {
     }
 
 
-    private void propertyValuesHolder(View view, float[] alpha, float[] scale,Animator.AnimatorListener listener) {
+    private void propertyValuesHolder(View view, float[] alpha, float[] scale, Animator.AnimatorListener listener) {
         PropertyValuesHolder pvhX = PropertyValuesHolder.ofFloat("alpha", alpha[0], alpha[1]);
         PropertyValuesHolder pvhY = PropertyValuesHolder.ofFloat("scaleX", scale[0], scale[1]);
         PropertyValuesHolder pvhZ = PropertyValuesHolder.ofFloat("scaleY", scale[0], scale[1]);
         ObjectAnimator anim = ObjectAnimator.ofPropertyValuesHolder(view, pvhX, pvhY, pvhZ);
         anim.setDuration(200).start();
-        if(listener!=null){
+        if (listener != null) {
             anim.addListener(listener);
         }
     }
