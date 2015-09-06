@@ -7,6 +7,7 @@ import android.animation.PropertyValuesHolder;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.easycamera.R;
 
@@ -26,6 +28,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -53,13 +56,17 @@ public class EasyCameraActivity extends Activity {
     private EasyCamera.CameraActions mCameraActions = null;
     private String mImagePath = null;
     Display display;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_easy_camera);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        //隐藏软键盘
+        int flags = WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM;
+        getWindow().addFlags(flags);
 
         mSurfaceView = (SurfaceView) findViewById(R.id.camera_preview);
 
@@ -68,21 +75,20 @@ public class EasyCameraActivity extends Activity {
         btn_apture_done = (ImageButton) findViewById(R.id.btn_apture_done);
         btn_apture_done.setVisibility(View.GONE);
         mSurfaceHolder = mSurfaceView.getHolder();
-        // 获取屏幕信息
-//        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-//        display = wm.getDefaultDisplay();
-//        mRate = display.getHeight()/display.getWidth();
-//        mRate = (new BigDecimal(mRate).setScale(2, BigDecimal.ROUND_HALF_UP)).floatValue();
-//        CameraParaUtil.mRate = mRate;
-        CameraParaUtil.mRate = DisplayUtil.getScreenRate(this);
-        Log.i(TAG,"长宽比率:"+  CameraParaUtil.mRate);
-        //
 
+        // 获取屏幕信息
+        if (isScreenLandscape()) {
+            CameraParaUtil.mRate = new BigDecimal(1 / DisplayUtil.getScreenRate(this)).setScale(2, BigDecimal.ROUND_HALF_UP).floatValue();//四舍五入两位小数;
+        } else {
+            CameraParaUtil.mRate = DisplayUtil.getScreenRate(this);
+        }
+        Log.i(TAG, "长宽比率:" + CameraParaUtil.mRate);
+        //
         mSurfaceHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 //　开启后置摄像头
-                //Log.d("TAG", "surfaceCreated初始化");
+                Log.d("TAG", "surfaceCreated初始化");
                 mEasyCamera = DefaultEasyCamera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
                 //　正常显示相机预览
                 WindowManager manager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
@@ -94,14 +100,22 @@ public class EasyCameraActivity extends Activity {
                 //Log.d("TAG", "surfaceChanged设置预览," + "format = " + format + ",width = " + width + ",height = " + height);
                 if (!previewIsRunning && mEasyCamera != null) {
                     // 设置相机翻转角度
-                    mEasyCamera.setDisplayOrientation(90);
+                    //mEasyCamera.setDisplayOrientation(90);
                     Camera.Parameters parameters = mEasyCamera.getParameters();
-                    parameters.setRotation(90);//保存的图片旋转90度
+                    //parameters.setRotation(90);//保存的图片旋转90度
+                    //--------
                     //parameters.setPictureSize(width, height);//设置拍出来的照片大小
                     //
                     List<Size> previewSizes = parameters.getSupportedPreviewSizes();
-                    Size pictureS = CameraParaUtil.getInstance().getPreviewSize(previewSizes, width);
-                    parameters.setPreviewSize(pictureS.width, pictureS.height);
+                    Size pictureS;
+                    if (isScreenLandscape()) {
+                        pictureS = CameraParaUtil.getInstance().getPreviewSize(previewSizes, height);
+                        parameters.setPreviewSize(pictureS.width, pictureS.height);
+                    } else {
+                        pictureS = CameraParaUtil.getInstance().getPreviewSize(previewSizes, width);
+                        parameters.setPreviewSize(pictureS.width, pictureS.height);
+                    }
+
                     //
                     List<Size> pictureSizes = parameters.getSupportedPictureSizes();
                     //params.setPictureSize(params.getSupportedPictureSizes().get(0))  魅族无效、天语w800无效
@@ -153,11 +167,6 @@ public class EasyCameraActivity extends Activity {
                         // 存储图片的操作
                         FileOutputStream fos = null;
                         try {
-                            //Log.d("TAG", getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator + "abc.jpg");
-                            //File picture = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                            //picture.delete();
-                            //deleteFile(picture);//删除文件夹下的所有文件
-                            //
                             String filename = System.currentTimeMillis() + ".jpg";
                             mImagePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator + filename;
                             fos = new FileOutputStream(new File(mImagePath));
@@ -170,8 +179,12 @@ public class EasyCameraActivity extends Activity {
                         }
                     }
                 };
-                // 拍摄照片的操作
-                mCameraActions.takePicture(EasyCamera.Callbacks.create().withJpegCallback(mPictureCallback));
+                try {
+                    // 拍摄照片的操作
+                    mCameraActions.takePicture(EasyCamera.Callbacks.create().withJpegCallback(mPictureCallback));
+                } catch (Exception e) {
+                    Toast.makeText(EasyCameraActivity.this, "打开相机出错", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -201,13 +214,14 @@ public class EasyCameraActivity extends Activity {
             }
         });
     }
+
     public void deleteFile(File oldPath) {
         if (oldPath.isDirectory()) {
             File[] files = oldPath.listFiles();
             for (File file : files) {
                 deleteFile(file);
             }
-        }else{
+        } else {
             oldPath.delete();
         }
     }
@@ -252,5 +266,29 @@ public class EasyCameraActivity extends Activity {
         if (listener != null) {
             anim.addListener(listener);
         }
+    }
+
+    //
+
+    /**
+     * 判断横竖屏状态
+     *
+     * @return true 横屏
+     * false 竖屏
+     */
+    public boolean isScreenLandscape() {
+        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
+        int ori = mConfiguration.orientation; //获取屏幕方向
+
+        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
+            //横屏
+            Log.i(TAG, "横屏");
+            return true;
+        } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
+            //竖屏
+            Log.i(TAG, "竖屏");
+            return false;
+        }
+        return false;
     }
 }
